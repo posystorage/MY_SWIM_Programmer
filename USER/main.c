@@ -2,6 +2,7 @@
 #include "delay.h"
 #include "sys.h"
 #include "timer.h"
+#include "usart.h"
 #include "swim.h"
 #include "SEGGER_SYSVIEW.h"
 
@@ -10,12 +11,13 @@
  {	
 	delay_init();	    	 //延时函数初始化
 	//SEGGER_SYSVIEW_Conf();//初始化调试组件
-
+	uart_init(115200);
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);// 设置中断优先级分组2
 	//LED_Init();		  	//初始化与LED连接的硬件接口
 	//TIM3_Int_Init(4999,7199);//10Khz的计数频率，计数到5000为500ms  
 	 SWIM_Init();
 	 SWIM_EnterProgMode();
+	 SWIM_CUT_OFF();
    	while(1)
 	{
 		
