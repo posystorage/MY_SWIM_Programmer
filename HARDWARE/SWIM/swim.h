@@ -37,7 +37,7 @@ extern uint16_t SWIN_OUT_Timer_ARR;
 #define SWIM_RST_HIGH  						GPIO_SWIM_RST_PORT->BSRR = GPIO_SWIM_RSTOUT_PIN		 
 #define SWIM_RST_LOW   						GPIO_SWIM_RST_PORT->BRR = GPIO_SWIM_RSTOUT_PIN	
 
-
+#define	SWIM_RST_IN								GPIO_ReadInputDataBit(GPIO_SWIM_RST_PORT, GPIO_SWIM_RSTOUT_PIN)
 
 
 
@@ -70,6 +70,7 @@ extern uint16_t SWIN_OUT_Timer_ARR;
 #define SWIN_DMA_DAT_IN_ENABLE(num){\
 DMA1_Channel1->CCR &= (uint16_t)(~DMA_CCR1_EN);\
 DMA1_Channel1->CNDTR = num;\
+DMA1->IFCR = DMA1_FLAG_TC1;\
 TIM4->CCER |= (TIM_CCER_CC1E|TIM_CCER_CC2E);\
 DMA1_Channel1->CCR |= DMA_CCR1_EN;\
 }
@@ -188,13 +189,18 @@ SWIM_RST_HIGH;\
 
 ////////
 void SWIM_Init(void);
-uint8_t SWIM_EnterProgMode(void);
-void SWIM_CUT_OFF(void);
-
+uint8_t SWIM_EnterProgMode_Time_Wheel(void (*pf)(void));	
+void SWIM_Set_Low_Speed(void);	
+void SWIM_Set_High_Speed(void);		
+uint8_t SWIM_SRST(void);	
+uint8_t SWIM_WOTF(uint32_t addr, uint16_t len, uint8_t *data);
+uint8_t SWIM_WOTF_LONG_DAT_Time_Wheel(uint32_t addr, uint16_t len, uint8_t *data,uint16_t *Sent_num,void (*pf)(void));
+uint8_t SWIM_ROTF_LONG_DAT_Time_Wheel(uint32_t addr, uint16_t len, uint8_t *data,uint16_t *Sent_num,void (*pf)(void));
 
 ////////
 void SWIM_GPIO_Init(void);
-
+uint8_t SWIM_EnterProgMode(void);
+void SWIM_CUT_OFF(void);
 
 
 

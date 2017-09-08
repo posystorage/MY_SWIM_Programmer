@@ -4,6 +4,7 @@
 #include "timer.h"
 #include "usart.h"
 #include "swim.h"
+#include "swim_cmd.h"
 
 #include "usb_lib.h"
 #include "hw_config.h"
@@ -32,11 +33,11 @@
 
 	 
 	 SWIM_Init();
-	 SWIM_EnterProgMode();
-	 SWIM_CUT_OFF();
+//	 SWIM_EnterProgMode();
+//	 SWIM_CUT_OFF();
    	while(1)
 	{
-		
+		SWIM_Service();
 	   	
 	}
 }

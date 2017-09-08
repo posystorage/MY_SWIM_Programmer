@@ -195,6 +195,18 @@ void SWIM_Set_Speed(uint8_t SWIM_MHz, uint8_t cnt0, uint8_t cnt1)//cnt0∫Õcnt1ππ≥
 	SWIM_PULSE_Threshold=SWIN_OUT_Timer_ARR/2;
 }
 
+void SWIM_Set_Low_Speed(void)
+{
+// Set swim speed   low speed	
+	SWIM_Set_Speed(8,20,2);
+}
+
+void SWIM_Set_High_Speed(void)
+{
+// Set swim speed   high speed	
+	SWIM_Set_Speed(8,8,2);	
+}
+
 
 uint8_t SWIM_Send_Header(uint8_t cmd)
 {
@@ -269,8 +281,8 @@ retry:
 	dly = SWIM_MAX_DLY;
 	SWIM_IN_TIMER_RISE_DMA_WAIT(dly);
 	//for(i=0;i<bitlen + 3;i++)test[i]=SWIN_DMA_DAT_IN[i];
-	SWIM_IN_TIMER_RISE_DMA_INIT(10, SWIN_DMA_DAT_IN + 1);
-	//SWIM_IN_TIMER_RISE_DMA_INIT(9, SWIN_DMA_DAT_IN + 1);
+	//SWIM_IN_TIMER_RISE_DMA_INIT(10, SWIN_DMA_DAT_IN + 1);
+	SWIM_IN_TIMER_RISE_DMA_INIT(9, SWIN_DMA_DAT_IN + 1);
 	//printf("0x%X %d %d %d %d %d %d %d %d %d %d %d  \r\n",cmd,test[0],test[1],test[2],test[3],test[4],test[5],test[6],test[7],test[8],test[9],test[10]);
 	
 
@@ -345,9 +357,18 @@ uint8_t SWIM_HW_In(uint8_t* data, uint8_t bitlen)
 }
 
 
-static uint8_t SWIM_SRST(void)
+uint8_t SWIM_SRST(void)
 {
-	return SWIM_HW_Out(SWIM_CMD_SRST, SWIM_CMD_BITLEN, SWIM_MAX_RESEND_CNT);
+	uint8_t i;
+	i=SWIM_HW_Out(SWIM_CMD_SRST, SWIM_CMD_BITLEN, SWIM_MAX_RESEND_CNT);
+	if(SWIM_RST_IN)
+	{
+		delay_us(20);	
+		SWIM_RST_LOW;
+		delay_ms(1);	
+		SWIM_RST_HIGH;		
+	}
+	return i;
 }
 
 
@@ -405,6 +426,72 @@ uint8_t SWIM_WOTF(uint32_t addr, uint16_t len, uint8_t *data)
 			{
 				return 6;
 			}
+		}
+
+		cur_addr += cur_len;
+		processed_len += cur_len;
+	}
+
+	return 0;
+}
+
+uint8_t SWIM_WOTF_LONG_DAT_Time_Wheel(uint32_t addr, uint16_t len, uint8_t *data,uint16_t *Sent_num,void (*pf)(void))//µÿ÷∑£¨≥§∂»£¨“™¥´ ˝æ›÷∏’Î£¨“—æ≠¥´ ‰µƒ ˝æ›¡ø÷∏’Î£¨√¸¡ÓΩ‚ŒˆªÿµÙ∫Ø ˝
+{
+	uint16_t processed_len;
+	uint8_t cur_len, i;
+	uint32_t cur_addr, addr_tmp;
+	u8 rtv2;
+
+	if ((0 == len) || ((uint8_t*)0 == data))
+	{
+		return 4;
+	}
+
+	processed_len = 0;
+	cur_addr = addr;
+	while (processed_len < len)
+	{
+		if ((len - processed_len) > 255)
+		{
+			cur_len = 255;
+		}
+		else
+		{
+			cur_len = len - processed_len;
+		}
+
+		SET_LE_U32(&addr_tmp, cur_addr);
+
+		if(SWIM_HW_Out(SWIM_CMD_WOTF, SWIM_CMD_BITLEN, SWIM_MAX_RESEND_CNT))
+		{
+			return 4;
+		}
+		if (SWIM_HW_Out(cur_len, 8, 0))
+		{
+			return 4;
+		}
+		rtv2=SWIM_HW_Out((addr_tmp >> 16) & 0xFF, 8, 0);	 //retry=0,≥ˆ¥Ì∫Û≤ª÷ÿ∑¢
+		if (rtv2)
+		{
+			return 4;
+		}
+		if (SWIM_HW_Out((addr_tmp >> 8) & 0xFF, 8, 0))
+		{
+			return 4;
+		}
+		if (SWIM_HW_Out((addr_tmp >> 0) & 0xFF, 8, 0))
+		{
+			return 4;
+		}
+		for (i = 0; i < cur_len; i++)
+		{
+			rtv2=SWIM_HW_Out(data[processed_len + i], 8, SWIM_MAX_RESEND_CNT);
+			*Sent_num=processed_len+i;
+			if (rtv2)
+			{
+				return 4;
+			}
+			pf();
 		}
 
 		cur_addr += cur_len;
@@ -472,6 +559,163 @@ uint8_t SWIM_ROTF(uint32_t addr, uint16_t len, uint8_t *data)
 		cur_addr += cur_len;
 		processed_len += cur_len;
 	}
+	return 0;
+}
+
+
+uint8_t SWIM_ROTF_LONG_DAT_Time_Wheel(uint32_t addr, uint16_t len, uint8_t *data,uint16_t *Sent_num,void (*pf)(void))//µÿ÷∑£¨≥§∂»£¨“™¥´ ˝æ›÷∏’Î£¨“—æ≠¥´ ‰µƒ ˝æ›¡ø÷∏’Î£¨√¸¡ÓΩ‚ŒˆªÿµÙ∫Ø ˝
+{
+	uint16_t processed_len;
+	uint8_t cur_len, i;
+	uint32_t cur_addr, addr_tmp;
+	u8 rtv2;
+
+	if ((0 == len) || ((uint8_t*)0 == data))
+	{
+		//printf("r1");
+		return 4;
+	}
+
+	processed_len = 0;
+	cur_addr = addr;
+	while (processed_len < len)
+	{
+		if ((len - processed_len) > 255)
+		{
+			cur_len = 255;
+		}
+		else
+		{
+			cur_len = len - processed_len;
+		}
+
+		SET_LE_U32(&addr_tmp, cur_addr);
+
+		if(SWIM_HW_Out(SWIM_CMD_ROTF, SWIM_CMD_BITLEN, SWIM_MAX_RESEND_CNT))
+		{
+			//printf("r2");
+			return 4;
+		}
+		if (SWIM_HW_Out(cur_len, 8, 0))
+		{
+			//printf("r3");
+			return 4;
+		}
+		if (SWIM_HW_Out((addr_tmp >> 16) & 0xFF, 8, 0))
+		{
+			//printf("r4");
+			return 4;
+		}
+		if (SWIM_HW_Out((addr_tmp >> 8) & 0xFF, 8, 0))
+		{
+			//printf("r5");
+			return 4;
+		}
+		if (SWIM_HW_Out((addr_tmp >> 0) & 0xFF, 8, 0))
+		{
+			//printf("r6");
+			return 4;
+		}
+		for (i = 0; i < cur_len; i++)
+		{
+			rtv2=SWIM_HW_In(&data[processed_len + i], 8);
+			*Sent_num=processed_len+i;
+			if (rtv2)
+			{
+				printf("r7");
+				return 4;
+			}
+			//pf();
+		}
+
+		cur_addr += cur_len;
+		processed_len += cur_len;
+	}
+	return 0;
+}
+
+uint8_t SWIM_EnterProgMode_Time_Wheel(void (*pf)(void))//¥´»Î≤Œ ˝  swim√¸¡ÓºÏ≤‚∫Ø ˝
+{
+	uint8_t i;
+	uint16_t time_out=0;
+	SWIN_DMA_DAT_IN_ENABLE(10);	
+	DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
+	SWIM_OUT_PIN_OD;
+	SWIN_DMA_DAT_IN_DONE=0;	
+//1 - LOW SWIM for 16us	(more)
+	SWIM_LOW;
+	my_delay_us_Part1(500);
+	pf();
+	my_delay_Part2();
+	
+	my_delay_us_Part1(500);
+	pf();
+	my_delay_Part2();
+	
+	SWIM_HIGH;
+//2 - 4 pulses 1kHz and 4 pulses 2kHz	
+	for (i = 0; i < 4; i++)
+	{
+		SWIM_HIGH;
+		my_delay_us_Part1(500);
+		pf();
+		my_delay_Part2();
+		SWIM_LOW;
+		my_delay_us_Part1(500);
+		pf();
+		my_delay_Part2();
+	}
+	
+	for (i = 0; i < 4; i++)
+	{
+		SWIM_HIGH;	
+		my_delay_us_Part1(250);
+		pf();
+		my_delay_Part2();
+		SWIM_LOW;
+		my_delay_us_Part1(250);
+		pf();
+		my_delay_Part2();
+	}
+	if(SWIN_DMA_DAT_IN_DONE==1)
+	{
+			DMA_Cmd(DMA1_Channel4, DISABLE);
+			SWIM_RST_HIGH;
+			SWIM_HIGH;
+		printf("e1");
+			return 4;//¥ÌŒÛ	£¨÷ÿ∏¥º”»Î ±–Úª·‘Ï≥…∏√¥ÌŒÛ
+		
+	}
+	SWIM_HIGH;	
+//3 - HSI is turned on . wait 128 swim clock synchronization pulse
+	while(SWIN_DMA_DAT_IN_DONE==0)
+	{
+		delay_us(1);
+		time_out++;
+		if(time_out>1000) 
+		{
+			DMA_Cmd(DMA1_Channel4, DISABLE);
+			SWIM_RST_HIGH;
+			printf("e2");
+			return 4;//≥¨ ±£¨Œﬁ…Ë±∏œÏ”¶
+		}	
+	}
+//4 - synchronization pulse
+	if(SWIN_DMA_DAT_IN[9]<1400&&SWIN_DMA_DAT_IN[9]>900)
+	{
+		SWIN_CLOCK_128=SWIN_DMA_DAT_IN[9];
+	
+	}
+	else
+	{
+			DMA_Cmd(DMA1_Channel4, DISABLE);
+			SWIM_RST_HIGH;
+			printf("e3");
+			return 4;//128swim ±÷”err	
+	}
+	DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, DISABLE);
+	
+	SWIM_OUT_PIN_AFOD;
 	return 0;
 }
 
