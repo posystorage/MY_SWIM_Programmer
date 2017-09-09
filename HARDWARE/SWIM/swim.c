@@ -67,7 +67,7 @@ void	SYNCSWPWM_TIMER_INIT(void)
 
 	
 	DMA_DeInit(DMA1_Channel1);
-	DMA_DeInit(DMA1_Channel6);
+	DMA_DeInit(DMA1_Channel3);
 	
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -138,9 +138,10 @@ void	SYNCSWPWM_TIMER_INIT(void)
 	TIM_OCInitStructure.TIM_Pulse = 0;
 	TIM_OCInitStructure.TIM_OCPolarity =  TIM_OCPolarity_Low;
 	TIM_OC1Init(TIM3, &TIM_OCInitStructure);
-	//TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM3->CCR1=0;//占空比为0 即一直保持高电平
+	TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
 	TIM_ARRPreloadConfig(TIM3, ENABLE);
-	TIM_DMACmd(TIM3, TIM_DMA_CC1, ENABLE);
+	TIM_DMACmd(TIM3, TIM_DMA_Update, ENABLE);
 	TIM_CtrlPWMOutputs(TIM3, ENABLE);
 	
 	DMA_StructInit(&DMA_InitStructure);
@@ -155,9 +156,8 @@ void	SYNCSWPWM_TIMER_INIT(void)
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
 	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-	DMA_Init(DMA1_Channel6, &DMA_InitStructure);
-	//DMA_ITConfig(DMA1_Channel6, DMA_IT_TC, ENABLE);
-	DMA_Cmd(DMA1_Channel6, ENABLE);		
+	DMA_Init(DMA1_Channel3, &DMA_InitStructure);
+	DMA_Cmd(DMA1_Channel3, ENABLE);		
 	
 	TIM_Cmd(TIM3,ENABLE);
 	
@@ -251,6 +251,7 @@ retry:
 		*ptr++ = SWIN_OUT_Timer_CN0;
 	}
 	// wait for last waveform -- parity bit
+	// 最后一个位为写pwm占空比为0
 	*ptr++ = 0;
 	SWIM_OUT_TIMER_DMA_INIT(bitlen + 3, SWIN_DMA_DAT_OUT);
 	SWIM_OUT_TIMER_DMA_WAIT();

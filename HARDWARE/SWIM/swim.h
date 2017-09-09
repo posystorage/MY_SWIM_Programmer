@@ -104,18 +104,16 @@ TIM3->EGR = TIM_PSCReloadMode_Immediate;\
 } 
 
 #define SWIM_OUT_TIMER_DMA_INIT(num, addr)	{\
-DMA1_Channel6->CCR &= ~DMA_CCR1_EN;\
-DMA1_Channel6->CNDTR = (num);\
-DMA1_Channel6->CMAR = (uint32_t)(addr);\
 TIM3->EGR = TIM_PSCReloadMode_Immediate;\
-DMA1_Channel6->CCR |= DMA_CCR1_EN;\
-TIM3->CCMR1|=TIM_CCMR1_OC1PE;\
+DMA1_Channel3->CCR &= ~DMA_CCR1_EN;\
+DMA1_Channel3->CNDTR = (num);\
+DMA1_Channel3->CMAR = (uint32_t)(addr);\
+DMA1_Channel3->CCR |= DMA_CCR1_EN;\
 }
 
 #define SWIM_OUT_TIMER_DMA_WAIT()	{\
-while(!(DMA1->ISR & DMA1_FLAG_TC6));\
-DMA1->IFCR = DMA1_FLAG_TC6;\
-TIM3->CCMR1&= (uint16_t)~((uint16_t)TIM_CCMR1_OC1PE);\
+while(!(DMA1->ISR & DMA1_FLAG_TC3));\
+DMA1->IFCR = DMA1_FLAG_TC3;\
 }
 //TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Disable);
 
