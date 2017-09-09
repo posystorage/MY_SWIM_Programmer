@@ -30,7 +30,7 @@ uint32_t ROTF_DAT_ADDR=0;
 
 void GET_USB_CMD_Data(uint8_t bEpAddr,uint8_t bEpNum)//断点回掉函数
 {
-
+uint16_t i;
 	if(USB_RX_CMD_BUSY)//上一个命令还没有被处理
 	{
 		USB_RX_DAT=1;
@@ -42,20 +42,12 @@ void GET_USB_CMD_Data(uint8_t bEpAddr,uint8_t bEpNum)//断点回掉函数
 		USB_RX_CMD_BUSY=1;
 		USB_RX_DAT=0;
 		//CMD_READY=2;
-	}
-}
-
-void SWIM_Process_USB_CMD(void)
-{
-	uint16_t i,j;
-	if(USB_RX_CMD_BUSY)//如果有命令
-	{
 		if(LONG_CMD_BUSY)//一次传不完
 		{
 
-			if(WOTF_DAT_num_left>64)
+			if(WOTF_DAT_num_left>USB_Rx_Cnt)
 			{
-				for(i=0;i<64;i++)
+				for(i=0;i<USB_Rx_Cnt;i++)
 				{
 					WOTF_DAT_Buffer[WOTF_DAT_num-WOTF_DAT_num_left]=USB_Rx_Buffer[i];		
 					WOTF_DAT_num_left--;								
@@ -63,8 +55,8 @@ void SWIM_Process_USB_CMD(void)
 			}
 			else
 			{
-				j=WOTF_DAT_num_left;
-				for(i=0;i<j;i++)
+				//j=WOTF_DAT_num_left;
+				for(i=0;i<USB_Rx_Cnt;i++)
 				{
 					WOTF_DAT_Buffer[WOTF_DAT_num-WOTF_DAT_num_left]=USB_Rx_Buffer[i];		
 					WOTF_DAT_num_left--;								
@@ -72,6 +64,39 @@ void SWIM_Process_USB_CMD(void)
 				LONG_CMD_BUSY=0;
 				SWIM_WOTF_DAT_EN=1;//usb接收完成，开始写往设备
 			}
+			USB_RX_CMD_BUSY=0;
+		}		
+		
+	}
+}
+
+void SWIM_Process_USB_CMD(void)
+{
+	uint16_t i;
+	if(USB_RX_CMD_BUSY)//如果有命令
+	{
+		if(LONG_CMD_BUSY)//一次传不完
+		{
+
+//			if(WOTF_DAT_num_left>USB_Rx_Cnt)
+//			{
+//				for(i=0;i<USB_Rx_Cnt;i++)
+//				{
+//					WOTF_DAT_Buffer[WOTF_DAT_num-WOTF_DAT_num_left]=USB_Rx_Buffer[i];		
+//					WOTF_DAT_num_left--;								
+//				}						
+//			}
+//			else
+//			{
+//				//j=WOTF_DAT_num_left;
+//				for(i=0;i<USB_Rx_Cnt;i++)
+//				{
+//					WOTF_DAT_Buffer[WOTF_DAT_num-WOTF_DAT_num_left]=USB_Rx_Buffer[i];		
+//					WOTF_DAT_num_left--;								
+//				}							
+//				LONG_CMD_BUSY=0;
+//				SWIM_WOTF_DAT_EN=1;//usb接收完成，开始写往设备
+//			}
 		}
 		else
 		{
@@ -94,7 +119,7 @@ void SWIM_Process_USB_CMD(void)
 					}					
 					case 0x03:
 					{	
-						if(USB_Rx_Buffer[2]==0x00&&USB_Rx_Buffer[3]==0x00)
+						if(USB_Rx_Buffer[2]==0x00)
 						{
 							SWIM_Set_Low_Speed();
 						}

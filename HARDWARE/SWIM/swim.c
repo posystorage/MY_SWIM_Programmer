@@ -15,6 +15,8 @@ uint16_t SWIN_OUT_Timer_CN1;//∏ﬂ
 uint16_t SWIM_PULSE_Threshold;
 
 
+uint8_t SWIM_ROTF_READ_DMA_NUM_NEXT_TIME=0;//œ¬¥Œ∂¡ ‰»Îª∫¥ÊµƒŒª÷√
+
 uint8_t ReadBuff[512];
 uint8_t WriteBuff[512];
 
@@ -96,7 +98,7 @@ void	SYNCSWPWM_TIMER_INIT(void)
 	TIM_SelectSlaveMode(TIM4, TIM_SlaveMode_Reset);
 	TIM_SelectMasterSlaveMode(TIM4, TIM_MasterSlaveMode_Enable);
 	TIM_DMACmd(TIM4, TIM_DMA_CC1, ENABLE);	
-	//TIM_DMACmd(TIM4, TIM_DMA_CC3, ENABLE);
+	TIM_DMACmd(TIM4, TIM_DMA_CC2, ENABLE);
 	TIM_Cmd(TIM4,ENABLE);
 
 
@@ -110,7 +112,7 @@ void	SYNCSWPWM_TIMER_INIT(void)
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
 	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
 	DMA_Init(DMA1_Channel1, &DMA_InitStructure);
 	DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
@@ -247,7 +249,9 @@ uint8_t SWIM_HW_Out(uint8_t cmd, uint8_t bitlen, uint16_t retry_cnt)
 retry:
 
 	//SYNCSWPWM_IN_TIMER_RISE_DMA_INIT(bitlen + 3, SWIM_DMA_IN_Buffer);
-	SWIN_DMA_DAT_IN_ENABLE(bitlen + 3);
+	//SWIN_DMA_DAT_IN_ENABLE(bitlen + 3);
+	
+	SWIN_DMA_DAT_IN_ENABLE(bitlen + 3 +10);//∞…œ¬“ª∏ˆŒªµƒƒ⁄»›“≤ ’œ¬¿¥
 	
 	*ptr++ = SWIN_OUT_Timer_CN0;
 
@@ -279,10 +283,12 @@ retry:
 	SWIM_OUT_TIMER_DMA_WAIT();
 
 	dly = SWIM_MAX_DLY;
-	SWIM_IN_TIMER_RISE_DMA_WAIT(dly);
+	SWIM_IN_TIMER_RISE_DMA_WAIT_WITH_NUM(dly,10);//”‡œ¬10∏ˆ¡øœ¬¥Œ
+	SWIM_ROTF_READ_DMA_NUM_NEXT_TIME=bitlen + 3;	
+	//SWIM_IN_TIMER_RISE_DMA_WAIT(dly);
 	//for(i=0;i<bitlen + 3;i++)test[i]=SWIN_DMA_DAT_IN[i];
 	//SWIM_IN_TIMER_RISE_DMA_INIT(10, SWIN_DMA_DAT_IN + 1);
-	SWIM_IN_TIMER_RISE_DMA_INIT(9, SWIN_DMA_DAT_IN + 1);
+	//SWIM_IN_TIMER_RISE_DMA_INIT(9, SWIN_DMA_DAT_IN + 1);
 	//printf("0x%X %d %d %d %d %d %d %d %d %d %d %d  \r\n",cmd,test[0],test[1],test[2],test[3],test[4],test[5],test[6],test[7],test[8],test[9],test[10]);
 	
 
@@ -315,31 +321,32 @@ uint8_t SWIM_HW_In(uint8_t* data, uint8_t bitlen)
 {
 	uint8_t ret = 0;
 	uint32_t dly;
-	//uint16_t test[32],i;
+	uint16_t test[32],i;
 
 	dly = SWIM_MAX_DLY;
 	SWIM_IN_TIMER_RISE_DMA_WAIT(dly);									//œ»Ω” ’“˝µºbit,ƒø±ÍµΩ÷˜ª˙£¨’‚∏ˆŒª±ÿ–Î «1
 	*data = 0;
-//	if (dly && (SWIN_DMA_DAT_IN[1] < SWIM_PULSE_Threshold))				//»Áπ˚=1,µÕµÁ∆Ω ±º‰–°”⁄4∏ˆ¬ˆ≥Â
-//	{
-//		for (dly = 0; dly < 8; dly++)
-//		{
-//			if (SWIN_DMA_DAT_IN[2 + dly] < SWIM_PULSE_Threshold)							
-//			{
-//				*data |= 1 << (7 - dly);
-//			}
-//		}
-	if (dly )				//»Áπ˚=1,µÕµÁ∆Ω ±º‰–°”⁄4∏ˆ¬ˆ≥Â
+	if (dly && (SWIN_DMA_DAT_IN[SWIM_ROTF_READ_DMA_NUM_NEXT_TIME] < SWIM_PULSE_Threshold))				//»Áπ˚=1,µÕµÁ∆Ω ±º‰–°”⁄4∏ˆ¬ˆ≥Â
 	{
 		for (dly = 0; dly < 8; dly++)
 		{
-			if (SWIN_DMA_DAT_IN[1 + dly] < SWIM_PULSE_Threshold)							
+			if (SWIN_DMA_DAT_IN[SWIM_ROTF_READ_DMA_NUM_NEXT_TIME +1 + dly] < SWIM_PULSE_Threshold)							
 			{
 				*data |= 1 << (7 - dly);
 			}
-		}	
+		}
+//	if (dly )				//»Áπ˚=1,µÕµÁ∆Ω ±º‰–°”⁄4∏ˆ¬ˆ≥Â
+//	{
+//		for (dly = 0; dly < 8; dly++)
+//		{
+//			if (SWIN_DMA_DAT_IN[1 + dly] < SWIM_PULSE_Threshold)							
+//			{
+//				*data |= 1 << (7 - dly);
+//			}
+//		}	
 		//for(i=0;i<10;i++)test[i]=SWIN_DMA_DAT_IN[i];
 		SWIM_IN_TIMER_RISE_DMA_INIT(11, SWIN_DMA_DAT_IN);
+		SWIM_ROTF_READ_DMA_NUM_NEXT_TIME=1;
 
 		SWIN_DMA_DAT_OUT[0] = SWIN_OUT_Timer_CN1;
 		SWIN_DMA_DAT_OUT[1] = 0;
@@ -350,6 +357,11 @@ uint8_t SWIM_HW_In(uint8_t* data, uint8_t bitlen)
 	}
 	else
 	{
+		if(dly==0)printf("r7-1");
+		if((SWIN_DMA_DAT_IN[SWIM_ROTF_READ_DMA_NUM_NEXT_TIME] > SWIM_PULSE_Threshold))printf("r7-2  %d  %d\r\n",SWIM_ROTF_READ_DMA_NUM_NEXT_TIME,SWIN_DMA_DAT_IN[SWIM_ROTF_READ_DMA_NUM_NEXT_TIME]);
+		for(i=0;i<10;i++)test[i]=SWIN_DMA_DAT_IN[i];
+		printf(" %d %d %d %d %d %d %d %d %d %d %d  \r\n",test[0],test[1],test[2],test[3],test[4],test[5],test[6],test[7],test[8],test[9],test[10]);
+		
 		ret = 1;
 	}
 
@@ -491,9 +503,9 @@ uint8_t SWIM_WOTF_LONG_DAT_Time_Wheel(uint32_t addr, uint16_t len, uint8_t *data
 			{
 				return 4;
 			}
-			pf();
+			
 		}
-
+		pf();
 		cur_addr += cur_len;
 		processed_len += cur_len;
 	}
@@ -590,55 +602,65 @@ uint8_t SWIM_ROTF_LONG_DAT_Time_Wheel(uint32_t addr, uint16_t len, uint8_t *data
 		}
 
 		SET_LE_U32(&addr_tmp, cur_addr);
-
+		__disable_irq();
 		if(SWIM_HW_Out(SWIM_CMD_ROTF, SWIM_CMD_BITLEN, SWIM_MAX_RESEND_CNT))
 		{
-			//printf("r2");
+			printf("r2");
+			__enable_irq();
 			return 4;
 		}
+
 		if (SWIM_HW_Out(cur_len, 8, 0))
 		{
-			//printf("r3");
+			__enable_irq();
+			printf("r3");
 			return 4;
 		}
 		if (SWIM_HW_Out((addr_tmp >> 16) & 0xFF, 8, 0))
 		{
-			//printf("r4");
+			__enable_irq();
+			printf("r4");
 			return 4;
 		}
 		if (SWIM_HW_Out((addr_tmp >> 8) & 0xFF, 8, 0))
 		{
-			//printf("r5");
+			__enable_irq();
+			printf("r5");
 			return 4;
 		}
 		if (SWIM_HW_Out((addr_tmp >> 0) & 0xFF, 8, 0))
 		{
-			//printf("r6");
+			__enable_irq();
+			printf("r6");
 			return 4;
 		}
+		__enable_irq();
 		for (i = 0; i < cur_len; i++)
 		{
 			rtv2=SWIM_HW_In(&data[processed_len + i], 8);
 			*Sent_num=processed_len+i;
 			if (rtv2)
 			{
-				printf("r7");
+				//__enable_irq();
+				printf("r7 %d %d\r\n",*Sent_num,i);
 				return 4;
 			}
-			//pf();
+		
 		}
+		//__enable_irq();
 
 		cur_addr += cur_len;
 		processed_len += cur_len;
+		pf();
 	}
 	return 0;
 }
 
 uint8_t SWIM_EnterProgMode_Time_Wheel(void (*pf)(void))//¥´»Î≤Œ ˝  swim√¸¡ÓºÏ≤‚∫Ø ˝
 {
-	uint8_t i;
+	uint8_t i;//,test[32];
 	uint16_t time_out=0;
-	SWIN_DMA_DAT_IN_ENABLE(10);	
+	SWIM_IN_TIMER_RISE_DMA_INIT(10,SWIN_DMA_DAT_IN);	
 	DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
 	SWIM_OUT_PIN_OD;
 	SWIN_DMA_DAT_IN_DONE=0;	
@@ -679,7 +701,7 @@ uint8_t SWIM_EnterProgMode_Time_Wheel(void (*pf)(void))//¥´»Î≤Œ ˝  swim√¸¡ÓºÏ≤‚∫
 	}
 	if(SWIN_DMA_DAT_IN_DONE==1)
 	{
-			DMA_Cmd(DMA1_Channel4, DISABLE);
+			DMA_Cmd(DMA1_Channel1, DISABLE);
 			SWIM_RST_HIGH;
 			SWIM_HIGH;
 		printf("e1");
@@ -694,7 +716,7 @@ uint8_t SWIM_EnterProgMode_Time_Wheel(void (*pf)(void))//¥´»Î≤Œ ˝  swim√¸¡ÓºÏ≤‚∫
 		time_out++;
 		if(time_out>1000) 
 		{
-			DMA_Cmd(DMA1_Channel4, DISABLE);
+			DMA_Cmd(DMA1_Channel1, DISABLE);
 			SWIM_RST_HIGH;
 			printf("e2");
 			return 4;//≥¨ ±£¨Œﬁ…Ë±∏œÏ”¶
@@ -711,6 +733,9 @@ uint8_t SWIM_EnterProgMode_Time_Wheel(void (*pf)(void))//¥´»Î≤Œ ˝  swim√¸¡ÓºÏ≤‚∫
 			DMA_Cmd(DMA1_Channel4, DISABLE);
 			SWIM_RST_HIGH;
 			printf("e3");
+//			for(i=0;i<10;i++)test[i]=SWIN_DMA_DAT_IN[i];
+//  		printf(" %d %d %d %d %d %d %d %d %d %d %d  \r\n",test[0],test[1],test[2],test[3],test[4],test[5],test[6],test[7],test[8],test[9],test[10]);
+		
 			return 4;//128swim ±÷”err	
 	}
 	DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, DISABLE);

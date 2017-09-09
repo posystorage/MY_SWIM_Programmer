@@ -92,6 +92,10 @@ DMA1_Channel1->CCR &= (uint16_t)(~DMA_CCR1_EN);\
 while((!(DMA1->ISR & DMA1_FLAG_TC1)) && --dly);\
 DMA1->IFCR = DMA1_FLAG_TC1;\
 }
+
+#define SWIM_IN_TIMER_RISE_DMA_WAIT_WITH_NUM(dly,num)	{\
+while((DMA1_Channel1->CNDTR>num) && --dly);\
+}
 ////////////////////////////////////////
 //TIM3->CNT=SWIN_OUT_Timer_ARR-10;\
 ///////////////swim_out timer/////////////////
