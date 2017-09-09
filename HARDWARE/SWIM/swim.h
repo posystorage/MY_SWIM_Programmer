@@ -71,7 +71,6 @@ extern uint16_t SWIN_OUT_Timer_ARR;
 DMA1_Channel1->CCR &= (uint16_t)(~DMA_CCR1_EN);\
 DMA1_Channel1->CNDTR = num;\
 DMA1->IFCR = DMA1_FLAG_TC1;\
-TIM4->CCER |= (TIM_CCER_CC1E|TIM_CCER_CC2E);\
 DMA1_Channel1->CCR |= DMA_CCR1_EN;\
 }
 
