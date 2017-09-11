@@ -13,7 +13,6 @@ extern uint16_t SWIN_OUT_Timer_ARR;
 
 #define GPIO_SWIM_OUT_PIN         GPIO_Pin_4		//Tim3_CH1映射到PB.4作为SWIM输出
 #define GPIO_SWIM_IN1_PIN					GPIO_Pin_7		//PB7,PB9 根线都是作为SWIM输入
-#define GPIO_SWIM_IN2_PIN				  GPIO_Pin_9		//Tim4_CH2 PB7// Tim4_CH4 PB9
 
 #define SWIM_OUT_PIN_OD 					GPIO_SWIM_PORT->CRL &= ~GPIO_CRL_CNF4_1  //CNF位 01为开漏  7个指令周期
 #define SWIM_OUT_PIN_AFOD				  GPIO_SWIM_PORT->CRL |= GPIO_CRL_CNF4	 //CNF位 11复用为开漏
@@ -23,9 +22,7 @@ extern uint16_t SWIN_OUT_Timer_ARR;
 
 
 #define SWIM_IN1  								GPIO_ReadInputDataBit(GPIO_SWIM_PORT, GPIO_SWIM_IN1_PIN)
-#define SWIM_IN2	  							GPIO_ReadInputDataBit(GPIO_SWIM_PORT, GPIO_SWIM_IN2_PIN)
 #define SWIM_IN1_Q  							GPIO_SWIM_PORT->IDR & GPIO_SWIM_IN1_PIN
-#define SWIM_IN2_Q  							GPIO_SWIM_PORT->IDR & GPIO_SWIM_IN2_PIN
 
 #define GPIOB_CRH_Addr    (GPIOB_BASE+0)
 #define SWIM_OUT_PIN_SET_OD   BIT_ADDR(GPIOB_CRH_Addr,19)=0//3个指令周
@@ -198,6 +195,7 @@ uint8_t SWIM_WOTF(uint32_t addr, uint16_t len, uint8_t *data);
 uint8_t SWIM_WOTF_LONG_DAT_Time_Wheel(uint32_t addr, uint16_t len, uint8_t *data,uint16_t *Sent_num,void (*pf)(void));
 uint8_t SWIM_ROTF_LONG_DAT_Time_Wheel(uint32_t addr, uint16_t len, uint8_t *data,uint16_t *Sent_num,void (*pf)(void));
 
+uint8_t SWIM_Communication_Reset(void);
 ////////
 void SWIM_GPIO_Init(void);
 uint8_t SWIM_EnterProgMode(void);

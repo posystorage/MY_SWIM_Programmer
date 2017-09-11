@@ -1,5 +1,6 @@
 #include "swim_cmd.h"
 #include "usb_lib.h"
+#include "SEGGER_SYSVIEW.h"
 
 uint8_t USB_Rx_Buffer[64];
 uint8_t USB_RX_DAT=0,//标记已经收到数据（但是上一个命令还处理完）
@@ -41,7 +42,6 @@ uint16_t i;
 		SetEPRxValid(bEpNum);//使能端点的数据接收
 		USB_RX_CMD_BUSY=1;
 		USB_RX_DAT=0;
-		//CMD_READY=2;
 		if(LONG_CMD_BUSY)//一次传不完
 		{
 
@@ -55,7 +55,6 @@ uint16_t i;
 			}
 			else
 			{
-				//j=WOTF_DAT_num_left;
 				for(i=0;i<USB_Rx_Cnt;i++)
 				{
 					WOTF_DAT_Buffer[WOTF_DAT_num-WOTF_DAT_num_left]=USB_Rx_Buffer[i];		
@@ -75,30 +74,7 @@ void SWIM_Process_USB_CMD(void)
 	uint16_t i;
 	if(USB_RX_CMD_BUSY)//如果有命令
 	{
-		if(LONG_CMD_BUSY)//一次传不完
-		{
-
-//			if(WOTF_DAT_num_left>USB_Rx_Cnt)
-//			{
-//				for(i=0;i<USB_Rx_Cnt;i++)
-//				{
-//					WOTF_DAT_Buffer[WOTF_DAT_num-WOTF_DAT_num_left]=USB_Rx_Buffer[i];		
-//					WOTF_DAT_num_left--;								
-//				}						
-//			}
-//			else
-//			{
-//				//j=WOTF_DAT_num_left;
-//				for(i=0;i<USB_Rx_Cnt;i++)
-//				{
-//					WOTF_DAT_Buffer[WOTF_DAT_num-WOTF_DAT_num_left]=USB_Rx_Buffer[i];		
-//					WOTF_DAT_num_left--;								
-//				}							
-//				LONG_CMD_BUSY=0;
-//				SWIM_WOTF_DAT_EN=1;//usb接收完成，开始写往设备
-//			}
-		}
-		else
+		if(LONG_CMD_BUSY==0)//一次能传完
 		{
 			if(USB_Rx_Buffer[0]==0xf4)
 			{
@@ -127,10 +103,6 @@ void SWIM_Process_USB_CMD(void)
 						{
 							SWIM_Set_High_Speed();
 						}
-//						if(USB_Rx_Buffer[2]==0x00&&USB_Rx_Buffer[3]==0x01)
-//						{
-//							SWIM_CUT_OFF();
-//						}
 						CMD_READY=0;						
 						break;
 					}
@@ -144,6 +116,11 @@ void SWIM_Process_USB_CMD(void)
 					{	
 						SWIM_SRST();
 						CMD_READY=0;						
+						break;
+					}
+					case 0x06:
+					{	
+						CMD_READY=SWIM_Communication_Reset();					
 						break;
 					}
 					case 0x07:

@@ -434,11 +434,6 @@
               <FilePath>..\HARDWARE\LED\led.c</FilePath>
             </File>
             <File>
-              <FileName>timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\TIMER\timer.c</FilePath>
-            </File>
-            <File>
               <FileName>swim.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\SWIM\swim.c</FilePath>

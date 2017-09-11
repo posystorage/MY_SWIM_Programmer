@@ -37,7 +37,7 @@ const uint8_t Virtual_Com_Port_DeviceDescriptor[] =
     USB_DEVICE_DESCRIPTOR_TYPE,     /* bDescriptorType */
     0x00,
     0x02,   /* bcdUSB = 2.00 */
-    0x00,   /* bDeviceClass: CDC */
+    0x00,   
     0x00,   /* bDeviceSubClass */
     0x00,   /* bDeviceProtocol */
     0x40,   /* bMaxPacketSize0 */

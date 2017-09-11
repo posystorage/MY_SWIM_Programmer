@@ -34,6 +34,9 @@
 #include "usb_istr.h"
 #include "usb_pwr.h"
 #include "swim_cmd.h"
+
+#include "SEGGER_SYSVIEW.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
@@ -57,14 +60,13 @@
 *******************************************************************************/
 void EP1_IN_Callback (void)
 {
-
 }
 
 
 
 
 /*******************************************************************************
-* Function Name  : EP3_OUT_Callback
+* Function Name  : EP2_OUT_Callback
 * Description    :
 * Input          : None.
 * Output         : None.
@@ -75,7 +77,13 @@ void EP2_OUT_Callback(void)
 	
 	GET_USB_CMD_Data(EP2_OUT,ENDP2);
 }
-
+/*******************************************************************************
+* Function Name  : EP3_IN_Callback
+* Description    :
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
 void EP3_IN_Callback (void)
 {
 
@@ -87,6 +95,7 @@ void SEND_Data_To_USB(uint8_t *DAT_Addr,uint8_t DAT_Num)
 	UserToPMABufferCopy(DAT_Addr, ENDP1_TXADDR, DAT_Num);//拷贝数据
 	SetEPTxCount(ENDP1, DAT_Num); //设定长度
 	SetEPTxValid(ENDP1);//使能发送
+	
 }
 
 
