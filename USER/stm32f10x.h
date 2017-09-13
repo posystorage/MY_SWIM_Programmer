@@ -111,12 +111,21 @@
    
    Tip: To avoid modifying this file each time you need to use different HSE, you
         can define the HSE value in your toolchain compiler preprocessor.
-  */           
+  */    
+#define USE_HSE_8MHZ
+//#define USE_HSE_12MHZ
+//#define USE_GD32_HSI_8MHZ
+
+
 #if !defined  HSE_VALUE
  #ifdef STM32F10X_CL   
   #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
  #else 
-  #define HSE_VALUE    ((uint32_t)8000000) /*!< Value of the External oscillator in Hz */
+	#ifdef USE_HSE_12MHZ   
+	 #define HSE_VALUE    ((uint32_t)12000000) /*!< Value of the External oscillator in Hz */
+	#else
+	 #define HSE_VALUE    ((uint32_t)8000000) /*!< Value of the External oscillator in Hz */
+	#endif
  #endif /* STM32F10X_CL */
 #endif /* HSE_VALUE */
 
@@ -1866,6 +1875,26 @@ typedef struct
  #define  RCC_CFGR_PLLMULL14                 ((uint32_t)0x00300000)        /*!< PLL input clock*14 */
  #define  RCC_CFGR_PLLMULL15                 ((uint32_t)0x00340000)        /*!< PLL input clock*15 */
  #define  RCC_CFGR_PLLMULL16                 ((uint32_t)0x00380000)        /*!< PLL input clock*16 */
+
+#ifdef USE_GD32_HSI_8MHZ
+  #define  RCC_CFGR_PLLMULL17                          ((uint32_t)0x08000000)        /*!< PLL input clock*17 */
+	#define  RCC_CFGR_PLLMULL18                          ((uint32_t)0x08040000)        /*!< PLL input clock*18 */
+	#define  RCC_CFGR_PLLMULL19                          ((uint32_t)0x08080000)        /*!< PLL input clock*19 */
+	#define  RCC_CFGR_PLLMULL20                          ((uint32_t)0x080C0000)        /*!< PLL input clock*20 */
+	#define  RCC_CFGR_PLLMULL21                          ((uint32_t)0x08100000)        /*!< PLL input clock*21 */
+	#define  RCC_CFGR_PLLMULL22                          ((uint32_t)0x08140000)        /*!< PLL input clock*22 */
+	#define  RCC_CFGR_PLLMULL23                          ((uint32_t)0x08180000)        /*!< PLL input clock*23 */
+	#define  RCC_CFGR_PLLMULL24                          ((uint32_t)0x081C0000)        /*!< PLL input clock*24 */
+	#define  RCC_CFGR_PLLMULL25                          ((uint32_t)0x08200000)        /*!< PLL input clock*25 */
+	#define  RCC_CFGR_PLLMULL26                          ((uint32_t)0x08240000)        /*!< PLL input clock*26 */
+	#define  RCC_CFGR_PLLMULL27                          ((uint32_t)0x08280000)        /*!< PLL input clock*27 */
+	#define  RCC_CFGR_PLLMULL28                          ((uint32_t)0x082C0000)        /*!< PLL input clock*28 */
+	#define  RCC_CFGR_PLLMULL29                          ((uint32_t)0x08300000)        /*!< PLL input clock*29 */
+	#define  RCC_CFGR_PLLMULL30                          ((uint32_t)0x08340000)        /*!< PLL input clock*30 */
+	#define  RCC_CFGR_PLLMULL31                          ((uint32_t)0x08380000)        /*!< PLL input clock*31 */
+	#define  RCC_CFGR_PLLMULL32                          ((uint32_t)0x083C0000)        /*!< PLL input clock*32 */
+#endif
+
  #define  RCC_CFGR_USBPRE                    ((uint32_t)0x00400000)        /*!< USB Device prescaler */
 
 /*!< MCO configuration */
