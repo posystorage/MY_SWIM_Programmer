@@ -49,6 +49,7 @@
  
 
 /* Private function prototypes -----------------------------------------------*/
+uint8_t send_end=0;
 /* Private functions ---------------------------------------------------------*/
 
 /*******************************************************************************
@@ -60,6 +61,7 @@
 *******************************************************************************/
 void EP1_IN_Callback (void)
 {
+	send_end=0;
 }
 
 
@@ -92,10 +94,12 @@ void EP3_IN_Callback (void)
 void SEND_Data_To_USB(uint8_t *DAT_Addr,uint8_t DAT_Num)
 {
 	while(GetEPTxStatus(ENDP1) != EP_TX_NAK);//等待上一个包送完
+	//while(send_end==1)
 	UserToPMABufferCopy(DAT_Addr, ENDP1_TXADDR, DAT_Num);//拷贝数据
+	SEGGER_SYSVIEW_PrintfTarget("num%d",DAT_Num);
 	SetEPTxCount(ENDP1, DAT_Num); //设定长度
 	SetEPTxValid(ENDP1);//使能发送
-	
+	//send_end=1;
 }
 
 

@@ -139,6 +139,7 @@ void SWIM_Process_USB_CMD(void)
 					{
 						if(CMD_READY==0||CMD_READY==1||CMD_READY==4)	
 						{
+							SEGGER_SYSVIEW_Print("9-1");
 							USB_Tx_Buffer[0]=CMD_READY;
 							USB_Tx_Buffer[1]=0x00;
 							USB_Tx_Buffer[2]=0x00;
@@ -159,6 +160,7 @@ void SWIM_Process_USB_CMD(void)
 								USB_Tx_Buffer[1]=CMD_READY_num&0x00ff;
 								USB_Tx_Buffer[2]=(CMD_READY_num>>8)&0x00ff;								
 							}
+							SEGGER_SYSVIEW_Print("9-2");
 							SEND_Data_To_USB(USB_Tx_Buffer,4);								
 						}							
 						break;
