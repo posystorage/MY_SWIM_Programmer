@@ -16,7 +16,7 @@
  int main(void)
  {	
 	delay_init();	    	 //延时函数初始化
-	SEGGER_SYSVIEW_Conf();//初始化调试组件
+	//SEGGER_SYSVIEW_Conf();//初始化调试组件
 	uart_init(115200);
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);// 设置中断优先级分组2
 	//LED_Init();		  	//初始化与LED连接的硬件接口
